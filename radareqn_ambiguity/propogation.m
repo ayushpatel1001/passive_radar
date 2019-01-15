@@ -1,21 +1,22 @@
-%t=[0:1:1599];
-tx = phased.Transmitter('PeakPower',200000,'Gain',10);%'SampleRate',fs*2
-rx =  phased.ReceiverPreamp('NoisePower',0,'SampleRate',fs);
+t = (0:length(wav)-1)/fs;
+tx = phased.Transmitter('PeakPower',200000,'Gain',1);%'SampleRate',fs*2
+rx =  phased.ReceiverPreamp('SampleRate',fs*2,'Gain',10);
 channel = phased.FreeSpace('SampleRate',fs,...
-    'TwoWayPropagation',false,'OperatingFrequency',450e6);
-channel1 = phased.FreeSpace('SampleRate',fs,...
-    'TwoWayPropagation',false,'OperatingFrequency',450e6);
-wav=waveStruct.waveform();
+    'TwoWayPropagation',false,'OperatingFrequency',fc);
+channelT = phased.FreeSpace('SampleRate',fs,...
+    'TwoWayPropagation',true,'OperatingFrequency',fc);
+%wav=waveStruct.waveform();
 ts=step(tx,wav);
 
 x=1;
 v=1;
-rcs=100;
-d=channel(ts,[11000; 0; 70],[0,0,70]',[0;0;0],[0;0;0]);
+rcs=10;
+directsignal=channel(ts,[11000; 0; 70],[0,0,70]',[0;0;0],[0;0;0]);
 totarget = channel(ts,[11000; 0; 70],targetpos(x,:)',[0;0;0],targetvel(v,:)');
 fromtarget= totarget*rcs;
-reflected = channel1(fromtarget,targetpos(x,:)',[0 0 70]',targetvel(v,:)',[0;0;0]);
-rs=step(rx,reflected);
+reflected = channel(fromtarget,targetpos(x,:)',[0 0 70]',targetvel(v,:)',[0;0;0]);
+reflectedrec=step(rx,reflected);
+directrec=step(rx,directsignal);
 %ambgfun(d,reflected,lfm.SampleRate,[lfm.PRF,lfm.PRF],'Cut','Doppler')
 %ambgfun(wav,lfm.SampleRate,lfm.PRF,'Cut','Delay');
 %xlim([-100e-3,100e-3]);
